@@ -1,8 +1,9 @@
 const { generateAccessToken, generateRefreshToken } = require('../middlewares/jwt');
 const User = require('../models/user');
+const formidable = require("formidable");
 // const jwt = require('jsonwebtoken')
 const asyncHandler = require('express-async-handler');
-
+const { removeTmp, cloudinary } = require('../utils/cloudinary');
 const register = asyncHandler(async (req, res) => {
     const { email, password, name, phone, address } = req.body
     if (!email || !password || !name || !phone)
@@ -87,5 +88,65 @@ const logout = asyncHandler(async (req, res) => {
         success: true,
         data: 'Logout is done !'
     })
+});
+const updateUserAvatar = asyncHandler(async (req, res) => {
+    const { id } = req.user;
+    const file = req.files.file;
+    if (file) {
+        cloudinary.uploader.upload(file.tempFilePath, { folder: "avatar" }, async (err, result) => {
+            if (err) {
+                removeTmp(file.tempFilePath);
+                return res.status(500).json({ success: false, error: err.message });
+            }
+
+            try {
+                removeTmp(file.tempFilePath);
+                const data = { avatar: result.secure_url };
+                await User.updateUser(data, id);
+                return res.status(200).json({
+                    success: true,
+                    data: { url: result.secure_url, mes: 'Cập nhật thành công' }
+                });
+            } catch (error) {
+                return res.status(500).json({ success: false, error: error.message });
+            }
+        });
+    }
 })
-module.exports = { getAllUser, register, login, getAccount, logout }
+const updateUser = asyncHandler(async (req, res) => {
+    const { id } = req.user;
+    const u = await User.updateUser(req.body, id);
+    if (u.affectedRows > 0) {
+        return res.status(200).json({
+            success: true,
+            data: 'Cập nhật thành công'
+        })
+    }
+    return res.status(404).json({
+        success: false,
+        message: 'Có lỗi xảy ra'
+    });
+})
+const updatePassUser = asyncHandler(async (req, res) => {
+    const { id } = req.user;
+    const { pass_current, password } = req.body;
+    const is = await User.findByIdAndPass(id, pass_current);
+    if (is) {
+        let body = { password: password }
+        const u = await User.updateUser(body, id);
+        if (u.affectedRows > 0) {
+            return res.status(200).json({
+                success: true,
+                data: { success: true, mes: 'Cập nhật thành công' }
+            })
+        }
+    } else {
+        return res.status(200).json({
+            success: true,
+            data: { success: false, mes: 'Sai thông tin' }
+        })
+    }
+})
+
+
+module.exports = { getAllUser, register, login, getAccount, logout, updateUser, updateUserAvatar, updatePassUser }

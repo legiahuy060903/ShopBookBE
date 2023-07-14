@@ -25,7 +25,18 @@ async function findEmail(email) {
 const findById = async (id) => {
     return new Promise((resolve, reject) => {
         db.query(
-            `select id, name , email , address , avatar , role , phone  from user where id = ? `, id,
+            `select id, name , email , address , avatar , role , phone,gender,date  from user where id = ? `, id,
+            function (err, results) {
+                if (err) reject(err);
+                else resolve(results[0]);
+            }
+        );
+    })
+}
+const findByIdAndPass = async (id, password) => {
+    return new Promise((resolve, reject) => {
+        db.query(
+            `select id from user where id = ? and password = ? `, [id, password],
             function (err, results) {
                 if (err) reject(err);
                 else resolve(results[0]);
@@ -76,5 +87,12 @@ const create = asyncHandler((user) => {
         });
     });
 });
-
-module.exports = { register, findEmail, create, findEmailAndPassword, updateToken, findById, updateRefreshToken }
+const updateUser = asyncHandler((user, id) => {
+    return new Promise((resolve, reject) => {
+        db.query("UPDATE user SET ? WHERE id = ?", [user, id], function (err, data) {
+            if (err) throw new Error(err);
+            else resolve(data);
+        });
+    });
+});
+module.exports = { register, findEmail, create, findEmailAndPassword, updateToken, findByIdAndPass, findById, updateRefreshToken, updateUser }
