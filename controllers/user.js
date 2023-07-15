@@ -41,7 +41,7 @@ const login = asyncHandler(async (req, res) => {
     const isAccount = await User.findEmailAndPassword(email, password);
     if (isAccount) {
         const { password, created_at, refreshToken, ...data } = isAccount;
-        const accessToken = generateAccessToken(isAccount.id, isAccount.role);
+        const accessToken = generateAccessToken(isAccount.id);
         const newrefreshToken = generateRefreshToken(isAccount.id);
         await User.updateToken(isAccount.id, newrefreshToken);
         res.cookie('refreshToken', newrefreshToken, { httpOnly: true, maxAge: 3 * 24 * 60 * 60 * 1000 })
@@ -51,7 +51,7 @@ const login = asyncHandler(async (req, res) => {
             account: data,
         })
     } else {
-        return res.status(403).json({
+        return res.status(200).json({
             success: false,
             message: 'Sai thông tin tài khoản'
         })
@@ -91,6 +91,7 @@ const logout = asyncHandler(async (req, res) => {
 });
 const updateUserAvatar = asyncHandler(async (req, res) => {
     const { id } = req.user;
+    console.log(id);
     const file = req.files.file;
     if (file) {
         cloudinary.uploader.upload(file.tempFilePath, { folder: "avatar" }, async (err, result) => {
@@ -115,6 +116,8 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
 })
 const updateUser = asyncHandler(async (req, res) => {
     const { id } = req.user;
+    console.log(id);
+    console.log(req.body);
     const u = await User.updateUser(req.body, id);
     if (u.affectedRows > 0) {
         return res.status(200).json({

@@ -1,7 +1,7 @@
 
 
 const asyncHandler = require('express-async-handler');
-const { createOrder, createOrderDetail, getOrder } = require('../models/order');
+const { createOrder, createOrderDetail, getOrder, findAllOrder } = require('../models/order');
 const CreOrder = asyncHandler(async (req, res) => {
     const { user_id, address: address, name: nameReceiver, phone } = req.body.data;
     const user = { user_id, address, phoneReceiver: +phone, nameReceiver };
@@ -25,6 +25,19 @@ const CreOrder = asyncHandler(async (req, res) => {
         success: false,
         message: 'Lỗi đơn hàng'
     });
-
 })
-module.exports = { CreOrder }
+
+const getAllOrder = asyncHandler(async (req, res) => {
+    let data = await findAllOrder();
+    if (data) {
+        return res.status(200).json({
+            success: true,
+            data: data,
+        });
+    }
+    res.status(404).json({
+        success: false,
+        message: 'Lỗi đơn hàng'
+    });
+})
+module.exports = { CreOrder, getAllOrder }

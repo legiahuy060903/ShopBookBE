@@ -34,8 +34,15 @@ async function getOrder(user_id, order_id) {
         });
     })
 }
+async function findAllOrder() {
+    return new Promise((resolve, reject) => {
+        db.query(`SELECT * from orders`, function (err, result) {
+            if (err) console.log(err);
+            resolve(result);
+        });
+    })
+}
 
 
 
-
-module.exports = { createOrder, createOrderDetail, getOrder };
+module.exports = { createOrder, createOrderDetail, getOrder, findAllOrder };

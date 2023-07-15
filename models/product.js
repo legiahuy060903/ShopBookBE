@@ -31,6 +31,17 @@ async function findAllTopView() {
         );
     })
 }
+async function findTopSold() {
+    return new Promise((resolve, reject) => {
+        db.query(`SELECT * FROM
+  (SELECT * FROM product ORDER BY sold DESC LIMIT 10) 
+  AS subquery ORDER BY sold ASC`,
+            function (err, results) {
+                resolve(results);
+            }
+        );
+    })
+}
 async function findAllNew() {
     return new Promise((resolve, reject) => {
         db.query(
@@ -61,4 +72,4 @@ const countProduct = (query) => {
         );
     })
 }
-module.exports = { allProduct, findAllBanner, findAllTopView, findAllNew, countProduct, findOneProduct }
+module.exports = { allProduct, findAllBanner, findAllTopView, findAllNew, countProduct, findOneProduct, findTopSold }

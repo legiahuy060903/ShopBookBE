@@ -8,6 +8,7 @@ router.post('/', uploadCloud.single('thumbnail'), ctrls.createProduct)
 router.get('/', ctrls.getProduct);
 
 router.get('/banner', ctrls.getBanner);
+router.get('/top_sold', ctrls.getTopSold);
 router.get('/topview', ctrls.getTopView);
 router.get('/topnew', ctrls.getTopNew);
 router.get('/detail/:id', ctrls.getProductDetail);

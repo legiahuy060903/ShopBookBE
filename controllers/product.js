@@ -75,7 +75,18 @@ const getBanner = asyncHandler(async (req, res) => {
         success: false,
     });
 })
-
+const getTopSold = asyncHandler(async (req, res) => {
+    let result = await productModel.findTopSold();
+    if (result) {
+        return res.status(200).json({
+            success: true,
+            data: result,
+        });
+    }
+    return res.status(200).json({
+        success: false,
+    });
+})
 const getTopView = asyncHandler(async (req, res) => {
     let result = await productModel.findAllTopView();
     if (result) {
@@ -114,4 +125,4 @@ const getProductDetail = asyncHandler(async (req, res) => {
         success: false,
     });
 })
-module.exports = { getProduct, createProduct, getBanner, getTopView, getTopNew, getProductDetail }
+module.exports = { getProduct, createProduct, getBanner, getTopView, getTopSold, getTopNew, getProductDetail }
