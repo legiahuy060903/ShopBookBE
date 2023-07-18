@@ -10,7 +10,6 @@ async function createOrder(data) {
             }
         );
     })
-
 }
 
 async function createOrderDetail(data) {

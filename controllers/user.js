@@ -58,11 +58,7 @@ const login = asyncHandler(async (req, res) => {
     }
 })
 const getAllUser = asyncHandler(async (req, res) => {
-    // const result = await User.find().select('-refreshToken -password -role')
-    // return res.status(200).json({
-    //     success: true,
-    //     users: result
-    // })
+
 })
 const getAccount = asyncHandler(async (req, res) => {
     const { id } = req.user;
