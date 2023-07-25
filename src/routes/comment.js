@@ -6,4 +6,6 @@ router.get('/', ctrls.getComments);
 router.post('', verifyAccessToken, ctrls.create);
 router.post('/like', ctrls.createLike);
 
-module.exports = router 
+module.exports = router
+
+

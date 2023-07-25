@@ -4,9 +4,8 @@ const uploadCloud = require('../middlewares/upload');
 const { verifyAccessToken, isAdmin } = require('../middlewares/verifyToken');
 
 
-router.post('/', uploadCloud.single('thumbnail'), ctrls.createProduct)
+router.post('', uploadCloud.fields([{ name: 'slide' }, { name: 'thumbnail' }]), ctrls.createProduct);
 router.get('/', ctrls.getProduct);
-
 router.get('/banner', ctrls.getBanner);
 router.get('/top_sold', ctrls.getTopSold);
 router.get('/topview', ctrls.getTopView);
@@ -17,11 +16,5 @@ router.get('/detail/:id', ctrls.getProductDetail);
 // router.use(verifyAccessToken, isAdmin);
 // router.put('/:pid', ctrls.updateProduct)
 // router.delete('/:pid', ctrls.deleteProduct)
-
-
-
-
-
-
 
 module.exports = router 

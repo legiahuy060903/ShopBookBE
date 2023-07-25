@@ -6,21 +6,36 @@ const asyncHandler = require('express-async-handler');
 
 
 const createProduct = asyncHandler(async (req, res) => {
-    const { name, desciption, publish_date, price, category_id,
-        number_of_page, quantity, created_at, feature } = req.body
-    if (!req.file) {
-        next(new Error('No file uploaded!'));
-        return;
+    const { ...body } = req.body;
+    const thumbnail = req.files.thumbnail[0];
+    const slide = req.files.slide;
+    body.thumbnail = thumbnail.path;
+    const resultID = await productModel.createProduct(body);
+    if (resultID) {
+        if (slide) {
+            let arrImg = slide.map((item) => ([resultID, item.path]));
+            const result = await productModel.createProductImage(arrImg);
+            if (result) return res.status(200).json({
+                success: true,
+                data: 'Thêm sản phẩm thành công',
+            });
+            else {
+                return res.status(404).json({
+                    success: false,
+                    data: 'Có lỗi xảy ra',
+                });
+            }
+        } else {
+            return res.status(200).json({
+                success: true,
+                data: 'Thêm sản phẩm thành công',
+            });
+        }
     }
-    if (!name || !desciption || !publish_date || !price || !category_id ||
-        !number_of_page || !quantity || !created_at || !feature) {
-        if (req.file) cloudinary.uploader.destroy(req.file.filename)
-    }
-
-    res.json({ secure_url: req.file.path });
 })
+
 const getProduct = asyncHandler(async (req, res) => {
-    const { page, sort, filterMaxPrice, filterMinPrice, category, search, limit } = req.query;
+    const { page, sort, filterMaxPrice, filterMinPrice, category, sort_category, quantity, search, created_at, limit } = req.query;
 
     let qs = '';
     let whereClause = '';
@@ -34,24 +49,33 @@ const getProduct = asyncHandler(async (req, res) => {
         const offset = 0
         qs = ` LIMIT ${offset},${li}`;
     }
-    if (sort) {
-        qs = `order by price ${req.query.sort}` + qs
+
+    if (sort_category) {
+        qs = `order by p.category_id ${req.query.sort_category}` + qs;
+    } else if (quantity) {
+        qs = `order by p.quantity ${req.query.quantity}` + qs
+    } else if (sort) {
+        qs = `order by p.price ${req.query.sort}` + qs
+    } else if (created_at) {
+        qs = `order by p.created_at ${req.query.created_at}` + qs
     }
+
+
     if (filterMinPrice && filterMaxPrice > filterMinPrice) {
-        conditions.push(`price > ${filterMinPrice} AND price < ${filterMaxPrice}`);
+        conditions.push(`p.price > ${filterMinPrice} AND p.price < ${filterMaxPrice}`);
     }
     if (category) {
-        conditions.push(`category_id = ${category}`);
+        conditions.push(`p.category_id = ${category}`);
     }
     if (search) {
-        conditions.push(`name LIKE '%${search}%'`);
+        conditions.push(`p.name LIKE '%${search}%'`);
     }
 
     if (conditions.length > 0) {
-        whereClause = `WHERE ${conditions.join(' AND ')}`;
+        whereClause = `AND ${conditions.join(' AND ')}`;
     }
 
-    const query = `SELECT * FROM product ${whereClause} ${qs}`;
+    const query = `SELECT p.*, c.name as name_category FROM product p JOIN category c WHERE c.id = p.category_id ${whereClause} ${qs}`;
     const result = await productModel.allProduct(query);
 
     const queryCount = query.slice(0, query.indexOf('LIMIT'));

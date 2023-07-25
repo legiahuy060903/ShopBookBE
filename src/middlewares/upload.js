@@ -1,6 +1,6 @@
-const cloudinary = require('cloudinary').v2;
-const { CloudinaryStorage } = require('multer-storage-cloudinary');
-const multer = require('multer');
+const cloudinary = require("cloudinary").v2;
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
+const multer = require("multer");
 
 cloudinary.config({
     cloud_name: "dbru1hnfl",
@@ -12,7 +12,7 @@ const storage = new CloudinaryStorage({
     cloudinary,
     allowedFormats: ['jpg', 'png'],
     params: {
-        forder: 'book'
+        folder: 'book'
     }
 });
 

@@ -87,7 +87,6 @@ const logout = asyncHandler(async (req, res) => {
 });
 const updateUserAvatar = asyncHandler(async (req, res) => {
     const { id } = req.user;
-    console.log(id);
     const file = req.files.file;
     if (file) {
         cloudinary.uploader.upload(file.tempFilePath, { folder: "avatar" }, async (err, result) => {

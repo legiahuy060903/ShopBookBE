@@ -1,7 +1,9 @@
 const router = require('express').Router();
 const ctrls = require('../controllers/order');
-
-
 router.post('', ctrls.CreOrder);
 router.get('', ctrls.getAllOrder);
-module.exports = router 
+router.post('/paypal', ctrls.paypalPost);
+router.post('/capture', ctrls.capture);
+module.exports = router;
+
+

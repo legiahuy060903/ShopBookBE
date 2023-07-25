@@ -37,6 +37,7 @@ async function findTopSold() {
   (SELECT * FROM product ORDER BY sold DESC LIMIT 10) 
   AS subquery ORDER BY sold ASC`,
             function (err, results) {
+                if (err) console.log(err);
                 resolve(results);
             }
         );
@@ -72,4 +73,26 @@ const countProduct = (query) => {
         );
     })
 }
-module.exports = { allProduct, findAllBanner, findAllTopView, findAllNew, countProduct, findOneProduct, findTopSold }
+const createProduct = (data) => {
+    return new Promise((resolve, reject) => {
+        db.query(
+            `INSERT INTO product SET ?`, data,
+            function (err, result) {
+                if (err) console.log(err);
+                resolve(result?.insertId);
+            }
+        );
+    })
+}
+const createProductImage = (data) => {
+    return new Promise((resolve, reject) => {
+        db.query(
+            `INSERT INTO image (product_id,url) VALUES ? `, [data],
+            function (err, result) {
+                if (err) console.log(err);
+                resolve(result?.affectedRows);
+            }
+        );
+    })
+}
+module.exports = { allProduct, findAllBanner, findAllTopView, findAllNew, countProduct, findOneProduct, findTopSold, createProduct, createProductImage }

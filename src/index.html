@@ -1,0 +1,113 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>PayPal Node App</title>
+</head>
+
+<body>
+    <h1>Nike shoes </h1>
+    <h2>Buy For $25</h2>
+    <form action="/api/order/paypal" method="post">
+        <input type="submit">
+    </form>
+</body>
+
+</html>
+{"id":"PAYID-MS4YFEI0GC727737J255783F","intent":"sale","state":"approved","cart":"6B335379R7683010X",
+"payer":{"payment_method":"paypal","status":"VERIFIED","payer_info":{"email":"sb-riozz26722536@personal.example.com",
+"first_name":"Huy","last_name":"Mua","payer_id":"EBNFPW7QE87M2","shipping_address":{"recipient_name":"Huy
+Mua","line1":"1 Main St","city":"San
+Jose","state":"CA","postal_code":"95131","country_code":"US"},"country_code":"US"}},
+"transactions":[{"amount":{"total":"2.78","currency":"USD","details":{"subtotal":"2.78",
+"shipping":"0.00","insurance":"0.00","handling_fee":"0.00","shipping_discount":"0.00","discount":"0.00"}},
+"payee":{"merchant_id":"UP9E88FFJPXLU","email":"sb-wkqhm26786677@business.example.com"},"description":"Mô
+tả đơn hàng của bạn","item_list":{"items":[{"name":"Đắc Nhân Tâm (Tái Bản
+2021)","sku":"sku0","price":"2.78","currency":"USD","tax":"0.00","quantity":1,"image_url":""}],
+"shipping_address":{"recipient_name":"Huy
+Mua","line1":"1 Main St","city":"San
+Jose","state":"CA","postal_code":"95131","country_code":"US"}},
+"related_resources":[{"sale":{"id":"5G08644189200283B","state":"completed",
+"amount":{"total":"2.78","currency":"USD","details":{"subtotal":"2.78","shipping":"0.00","insurance":"0.00",
+"handling_fee":"0.00","shipping_discount":"0.00","discount":"0.00"}},"payment_mode":"INSTANT_TRANSFER",
+"protection_eligibility":"ELIGIBLE","protection_eligibility_type":"ITEM_NOT_RECEIVED_ELIGIBLE,UNAUTHORIZED_PAYMENT_ELIGIBLE",
+"transaction_fee":{"value":"0.59","currency":"USD"},"parent_payment":"PAYID-MS4YFEI0GC727737J255783F",
+"create_time":"2023-07-20T18:53:19Z","update_time":"2023-07-20T18:53:19Z",
+"links":[{"href":"https://api.sandbox.paypal.com/v1/payments/sale/5G08644189200283B",
+"rel":"self","method":"GET"},{"href":"https://api.sandbox.paypal.com/v1/payments/sale/5G08644189200283B/refund",
+"rel":"refund","method":"POST"},{"href":"https://api.sandbox.paypal.com/v1/payments/payment/PAYID-MS4YFEI0GC727737J255783F",
+"rel":"parent_payment","method":"GET"}]}}]}],"failed_transactions":[],"create_time":"2023-07-20T18:53:05Z",
+"update_time":"2023-07-20T18:53:19Z",
+"links":[{"href":"https://api.sandbox.paypal.com/v1/payments/payment/PAYID-MS4YFEI0GC727737J255783F",
+"rel":"self","method":"GET"}],"httpStatusCode":200}
+
+const paypalPost = asyncHandler(async (req, res) => {
+const { address, orders, user_id } = req.body;
+let total = (orders.reduce((a, b) => {
+return a + (b.quantity * (b.cart.price / 23000));
+}, 0));
+let items = orders.map((item, i) => {
+return {
+"name": item.cart.name,
+"sku": "sku" + i,
+"price": (item.quantity * (item.cart.price / 23000).toFixed(2)).toString(),
+"currency": "USD",
+"quantity": 1
+}
+});
+
+const create_payment_json = {
+"intent": "sale",
+"payer": {
+"payment_method": "paypal",
+},
+"transactions": [{
+"item_list": {
+"items": items
+},
+"amount": {
+"currency": "USD",
+"total": (total.toFixed(2)).toString(),
+
+},
+"description": "Mô tả đơn hàng của bạn"
+}],
+"redirect_urls": {
+"return_url": 'http://localhost:8888/api/order/paypal/success',
+"cancel_url": 'http://localhost:3000/',
+},
+};
+
+paypal.payment.create(create_payment_json, function (error, payment) {
+if (error) {
+throw error;
+} else {
+console.log('Create Payment Response');
+for (let i = 0; i < payment.links.length; i++) { if (payment.links[i].rel==='approval_url' ) {
+    console.log(payment.links[i].href); return res.redirect(payment.links[i].href); } } } }); }); const
+    success=asyncHandler(async (req, res)=> {
+    console.log('dong', req.query);
+    const payerId = req.query.PayerID;
+    const paymentId = req.query.paymentId;
+    const total = 2.78;
+    const execute_payment_json = {
+    "payer_id": payerId,
+    "transactions": [{
+    "amount": {
+    "currency": "USD",
+    "total": total.toString()
+    }
+    }]
+    };
+
+    paypal.payment.execute(paymentId, execute_payment_json, function (error, payment) {
+    if (error) {
+    res.json('cancle');
+    } else {
+    console.log(JSON.stringify(payment));
+    res.json('success');
+    }
+    });
+    });

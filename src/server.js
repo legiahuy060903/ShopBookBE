@@ -10,17 +10,27 @@ const app = express();
 const port = process.env.PORT || 5000;
 const initRoutes = require('./routes');
 
-const corsOptions = {
-  origin: 'http://localhost:3000',
-  credentials: true,
-}
-app.use(cors(corsOptions));
+// const corsOptions = {
+//   origin: 'http://localhost:3000',
+//   credentials: true,
+// }
+
+
+app.use(cors());
+app.use((req, res, next) => {
+  res.set({
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "*",
+    "Access-Control-Allow-Headers": "'Access-Control-Allow-Headers: Origin, Content-Type, X-Auth-Token'",
+  });
+  next();
+});
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use(fileUpload({
-  useTempFiles: true
-}))
+// app.use(fileUpload({
+//   useTempFiles: true
+// }))
 initRoutes(app);
 
 app.listen(port, () => {
