@@ -48,7 +48,6 @@ app.post('/pay', function (req, res) {
             "description": "Hat for the best team ever"
         }]
     };
-    console.log(object);
     paypal.payment.create(create_payment_json, function (error, payment) {
         if (error) {
             res.render('cancle');

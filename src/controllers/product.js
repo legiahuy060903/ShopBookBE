@@ -15,11 +15,12 @@ const createProduct = asyncHandler(async (req, res) => {
         if (slide) {
             let arrImg = slide.map((item) => ([resultID, item.path]));
             const result = await productModel.createProductImage(arrImg);
-            if (result) return res.status(200).json({
-                success: true,
-                data: 'Thêm sản phẩm thành công',
-            });
-            else {
+            if (result) {
+                return res.status(200).json({
+                    success: true,
+                    data: 'Thêm sản phẩm thành công',
+                })
+            } else {
                 return res.status(404).json({
                     success: false,
                     data: 'Có lỗi xảy ra',
@@ -34,9 +35,29 @@ const createProduct = asyncHandler(async (req, res) => {
     }
 })
 
+const deleteProduct = asyncHandler(async (req, res) => {
+    const id = req.params.id;
+    const result = await productModel.delProduct(id);
+    if (result) {
+        return res.status(200).json({
+            success: true,
+            data: 'Xóa sản phẩm thành công'
+        });
+    }
+    res.status(200).json({
+        success: false,
+        data: 'Có lỗi xảy ra'
+    });
+});
+const delImgProduct = asyncHandler(async (req, res) => {
+    const { uid, url } = req.body;
+    await productModel.delImg(uid);
+    productModel.destroyImg(url);
+    return res.sendStatus(200);
+});
 const getProduct = asyncHandler(async (req, res) => {
-    const { page, sort, filterMaxPrice, filterMinPrice, category, sort_category, quantity, search, created_at, limit } = req.query;
 
+    const { page, sort, filterMaxPrice, filterMinPrice, category, sort_category, quantity, search, created_at, limit } = req.query;
     let qs = '';
     let whereClause = '';
     const li = +limit || 10;
@@ -44,7 +65,7 @@ const getProduct = asyncHandler(async (req, res) => {
 
     if (page) {
         const offset = (+req.query.page > 0 ? (+req.query.page - 1) * li : 0);
-        qs = ` LIMIT ${offset},${li}`;
+        qs = ` LIMIT ${offset},${li} `;
     } else {
         const offset = 0
         qs = ` LIMIT ${offset},${li}`;
@@ -53,13 +74,12 @@ const getProduct = asyncHandler(async (req, res) => {
     if (sort_category) {
         qs = `order by p.category_id ${req.query.sort_category}` + qs;
     } else if (quantity) {
-        qs = `order by p.quantity ${req.query.quantity}` + qs
+        qs = ` order by p.quantity ${req.query.quantity}` + qs
     } else if (sort) {
         qs = `order by p.price ${req.query.sort}` + qs
     } else if (created_at) {
         qs = `order by p.created_at ${req.query.created_at}` + qs
     }
-
 
     if (filterMinPrice && filterMaxPrice > filterMinPrice) {
         conditions.push(`p.price > ${filterMinPrice} AND p.price < ${filterMaxPrice}`);
@@ -75,16 +95,16 @@ const getProduct = asyncHandler(async (req, res) => {
         whereClause = `AND ${conditions.join(' AND ')}`;
     }
 
-    const query = `SELECT p.*, c.name as name_category FROM product p JOIN category c WHERE c.id = p.category_id ${whereClause} ${qs}`;
+    const query = `SELECT  p.*, c.name AS name_category, 
+    ( SELECT CONCAT('[', GROUP_CONCAT( CONCAT(' {"id":', i.id, ',"url": "', i.url, '" }') ORDER BY i.id SEPARATOR ',' ), ']') 
+    FROM image i WHERE i.product_id = p.id ) AS images FROM product p 
+    JOIN category c ON p.category_id = c.id  WHERE c.id = p.category_id ${whereClause} group by p.id ${qs}`;
     const result = await productModel.allProduct(query);
-
     const queryCount = query.slice(0, query.indexOf('LIMIT'));
-
     const total = await productModel.countProduct(queryCount);
-
     return res.status(200).json({
         success: true,
-        data: { data: result, total: total.length },
+        data: { data: result, total: total?.length },
     });
 });
 const getBanner = asyncHandler(async (req, res) => {
@@ -149,4 +169,23 @@ const getProductDetail = asyncHandler(async (req, res) => {
         success: false,
     });
 })
-module.exports = { getProduct, createProduct, getBanner, getTopView, getTopSold, getTopNew, getProductDetail }
+const updateProduct = asyncHandler(async (req, res) => {
+    const id = req.params.id;
+    const slide = req.files?.slide;
+    const thumbnail = req.files.thumbnail[0];
+    thumbnail && (req.body.thumbnail = thumbnail.path)
+    let arrImg = slide?.map((item) => ([id, item.path]));
+    await productModel.findIdUpdate(id, req.body);
+    if (arrImg && arrImg.length > 0) await productModel.createProductImage(arrImg);
+    return res.status(200).json({
+        data: {
+            success: true,
+            mes: "Cập nhật thành công"
+        },
+    })
+})
+module.exports = {
+    getProduct, createProduct, getBanner,
+    getTopView, getTopSold, getTopNew, getProductDetail,
+    deleteProduct, updateProduct, delImgProduct
+}

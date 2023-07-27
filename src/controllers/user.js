@@ -41,8 +41,8 @@ const login = asyncHandler(async (req, res) => {
     const isAccount = await User.findEmailAndPassword(email, password);
     if (isAccount) {
         const { password, created_at, refreshToken, ...data } = isAccount;
-        const accessToken = generateAccessToken(isAccount.id);
-        const newrefreshToken = generateRefreshToken(isAccount.id);
+        const accessToken = generateAccessToken(isAccount.id, isAccount.role);
+        const newrefreshToken = generateRefreshToken(isAccount.id, isAccount.role);
         await User.updateToken(isAccount.id, newrefreshToken);
         res.cookie('refreshToken', newrefreshToken, { httpOnly: true, maxAge: 3 * 24 * 60 * 60 * 1000 })
         return res.status(200).json({
