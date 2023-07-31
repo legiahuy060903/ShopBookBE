@@ -1,4 +1,5 @@
 
+
 const productModel = require('../models/product')
 const cloudinary = require('cloudinary').v2;
 const asyncHandler = require('express-async-handler');
@@ -38,6 +39,7 @@ const createProduct = asyncHandler(async (req, res) => {
 const deleteProduct = asyncHandler(async (req, res) => {
     const id = req.params.id;
     const result = await productModel.delProduct(id);
+
     if (result) {
         return res.status(200).json({
             success: true,
@@ -62,14 +64,10 @@ const getProduct = asyncHandler(async (req, res) => {
     let whereClause = '';
     const li = +limit || 10;
     let conditions = [];
+    let page_current = +page || 1;
 
-    if (page) {
-        const offset = (+req.query.page > 0 ? (+req.query.page - 1) * li : 0);
-        qs = ` LIMIT ${offset},${li} `;
-    } else {
-        const offset = 0
-        qs = ` LIMIT ${offset},${li}`;
-    }
+    const offset = (page_current > 0 ? (page_current - 1) * li : 0);
+    qs = ` LIMIT ${offset},${li} `;
 
     if (sort_category) {
         qs = `order by p.category_id ${req.query.sort_category}` + qs;
@@ -172,16 +170,16 @@ const getProductDetail = asyncHandler(async (req, res) => {
 const updateProduct = asyncHandler(async (req, res) => {
     const id = req.params.id;
     const slide = req.files?.slide;
-    const thumbnail = req.files.thumbnail[0];
-    thumbnail && (req.body.thumbnail = thumbnail.path)
+    const thumbnail = req.files?.thumbnail;
+    if (thumbnail) req.body.thumbnail = thumbnail[0].path;
     let arrImg = slide?.map((item) => ([id, item.path]));
     await productModel.findIdUpdate(id, req.body);
-    if (arrImg && arrImg.length > 0) await productModel.createProductImage(arrImg);
+    if (arrImg && arrImg?.length > 0) await productModel.createProductImage(arrImg);
     return res.status(200).json({
         data: {
             success: true,
             mes: "Cập nhật thành công"
-        },
+        }
     })
 })
 module.exports = {

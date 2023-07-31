@@ -1,4 +1,5 @@
 const db = require('../config/connectdb');
+const pool = require('../config/connectPromise');
 
 async function createOrder(data) {
     return new Promise((resolve, reject) => {
@@ -33,6 +34,26 @@ async function getOrder(user_id, order_id) {
         });
     })
 }
+async function getOrderAndDetail(qs) {
+    const detailOrder = async (id) => {
+        let detail = (await pool.query(`SELECT od.*, p.thumbnail AS thumb FROM order_detail od JOIN product p ON od.product_id = p.id WHERE od.order_id = ?`, id))[0];
+        return detail;
+    };
+    let orders = (await pool.query('SELECT * FROM orders ' + qs))[0];
+    let cut = qs.slice(0, qs.indexOf("LIMIT"));
+    let total = ((await pool.query('SELECT count(id) as total FROM orders ' + cut))[0])[0].total;
+    for (let i = 0; i < orders.length; i++) {
+        const details = await detailOrder(orders[i].id);
+        orders[i].detail = details;
+    }
+
+    return { data: orders, total: total };
+}
+const findAndDelete = async (id) => {
+    await pool.query(`DELETE FROM order_detail WHERE order_id = ${id}`)
+    const r = (await pool.query(`DELETE FROM orders WHERE id = ${id}`))[0];
+    return r.affectedRows
+}
 async function findAllOrder() {
     return new Promise((resolve, reject) => {
         db.query(`SELECT * from orders`, function (err, result) {
@@ -41,7 +62,11 @@ async function findAllOrder() {
         });
     })
 }
+const findAndUpdate = async (id, body) => {
+    console.log(id, body);
+    const r = (await pool.query(`UPDATE orders SET ? WHERE id = ?`, [body, id]))[0];
+    return r.affectedRows
+}
 
 
-
-module.exports = { createOrder, createOrderDetail, getOrder, findAllOrder };
+module.exports = { findAndUpdate, createOrder, createOrderDetail, getOrder, findAllOrder, getOrderAndDetail, findAndDelete };

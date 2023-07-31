@@ -10,7 +10,7 @@ const initRoutes = (app) => {
     app.use('/api/category', categoryRouter);
     app.use('/api/order', orderRouter);
     app.use('/api/comment', commentRouter);
-    app.use(notFount)
-    app.use(errHandler)
+    // app.use(notFount)
+    // app.use(errHandler)
 }
 module.exports = initRoutes

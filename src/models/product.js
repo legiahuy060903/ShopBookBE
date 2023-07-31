@@ -1,14 +1,7 @@
 const db = require('../config/connectdb');
-const mysql = require('mysql2/promise');
-const { removeTmp, cloudinary } = require('../utils/cloudinary');
-const pool = mysql.createPool({
-    host: 'localhost',
-    user: 'root',
-    database: 'book',
-    password: '',
-    waitForConnections: true,
-    connectionLimit: 10,
-});
+const pool = require('../config/connectPromise');
+const { cloudinary } = require('../utils/cloudinary');
+
 
 async function allProduct(query) {
     return new Promise((resolve, reject) => {
@@ -106,7 +99,7 @@ const createProductImage = (data) => {
 }
 const delProduct = async (id) => {
     let arrImg = await findImgProduct(id);
-    if (arrImg && arrImg.length > 0) {
+    if (arrImg && arrImg?.length > 0) {
         arrImg.forEach((item) => {
             destroyImg(item);
         });
@@ -116,24 +109,16 @@ const delProduct = async (id) => {
     const deleteLikeCommentQuery = `DELETE FROM like_comment WHERE product_id = ?`;
     const deleteOrderDetailQuery = `DELETE FROM order_detail WHERE product_id = ?`;
     const deleteProductQuery = `DELETE FROM product WHERE id = ?`;
-    return await Promise.all([pool.query(deleteOrderDetailQuery, id), pool.query(deleteImageQuery, id),
-    pool.query(deleteCommentQuery, id), pool.query(deleteLikeCommentQuery, id), pool.query(deleteProductQuery, id)]);
+    await Promise.all([pool.query(deleteOrderDetailQuery, id), pool.query(deleteImageQuery, id),
+    pool.query(deleteLikeCommentQuery, id), pool.query(deleteCommentQuery, id)]);
+    return await pool.query(deleteProductQuery, id)
 }
-const all = () => {
-    return new Promise((resolve, reject) => {
-        db.query(
-            'select * from product',
-            function (err, results) {
-                resolve(results);
-            }
-        );
-    })
-}
+
 
 const findImgProduct = async (id) => {
     let data = (await findOneProduct(id))[0];
     let arrImg = [data.thumbnail]
-    if (data.images.length > 0) {
+    if (data.images && data.images?.length > 0) {
         arrImg.push(...data?.images?.split(','))
     }
     return arrImg
@@ -166,7 +151,7 @@ const findIdUpdate = (id, body) => {
 }
 
 module.exports = {
-    destroyImg, findImgProduct, all, findIdUpdate,
+    destroyImg, findImgProduct, findIdUpdate,
     delImg, allProduct, findAllBanner, findAllTopView,
     findAllNew, countProduct, findOneProduct, findTopSold,
     createProduct, createProductImage, delProduct

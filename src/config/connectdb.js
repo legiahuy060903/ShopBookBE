@@ -1,12 +1,15 @@
 const mysql = require('mysql2');
+
 const dbconnection = mysql.createPool({
   host: 'localhost',
   user: 'root',
   database: 'book',
   password: '',
+  port: 3333,
   waitForConnections: true,
   connectionLimit: 10,
 });
+
 
 dbconnection.getConnection(function (err, connection) {
   if (err) {

@@ -1,4 +1,5 @@
 const db = require('../config/connectdb');
+const pool = require('../config/connectPromise');
 const asyncHandler = require('express-async-handler');
 async function register(query) {
     return new Promise((resolve, reject) => {
@@ -21,6 +22,19 @@ async function findEmail(email) {
             }
         );
     })
+}
+async function find(qs) {
+    let user = (await pool.query('SELECT * FROM user ' + qs))[0];
+    let cut = qs.slice(0, qs.indexOf("LIMIT"));
+    let total = ((await pool.query('SELECT count(id) as total FROM user ' + cut))[0])[0].total;
+    const all = (await pool.query('SELECT * from user'))[0];
+    const dataExport = all.map(item => {
+        delete item.refreshToken
+        delete item.role
+        delete item.id
+        return item
+    });
+    return { data: user, total: total, export: dataExport };
 }
 const findById = async (id) => {
     return new Promise((resolve, reject) => {
@@ -95,4 +109,21 @@ const updateUser = asyncHandler((user, id) => {
         });
     });
 });
-module.exports = { register, findEmail, create, findEmailAndPassword, updateToken, findByIdAndPass, findById, updateRefreshToken, updateUser }
+const findAndDelete = async (id) => {
+    const deleteLikeCommentQuery = `DELETE FROM like_comment WHERE user_id = ?`;
+    const deleteCommentQuery = `DELETE FROM comment WHERE user_id = ?`;
+    const deleteOrderDetailQuery = `DELETE FROM orders WHERE user_id = ?`;
+    const idOrder = (await pool.query('SELECT id from orders where user_id = ?', id))[0].map(item => item.id);
+    if (idOrder && idOrder?.length > 0) {
+        idOrder.forEach(async (idOr) => {
+            await pool.query('DELETE FROM order_detail where order_id = ?', idOr);
+        });
+    }
+    await Promise.all([pool.query(deleteOrderDetailQuery, id),
+    pool.query(deleteLikeCommentQuery, id), pool.query(deleteCommentQuery, id)]);
+
+    let re = (await pool.query('DELETE FROM user where id = ?', id))[0];
+    return re.affectedRows
+}
+
+module.exports = { findAndDelete, find, register, findEmail, create, findEmailAndPassword, updateToken, findByIdAndPass, findById, updateRefreshToken, updateUser }

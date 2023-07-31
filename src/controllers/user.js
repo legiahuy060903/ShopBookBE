@@ -1,9 +1,6 @@
 const { generateAccessToken, generateRefreshToken } = require('../middlewares/jwt');
 const User = require('../models/user');
-const formidable = require("formidable");
-// const jwt = require('jsonwebtoken')
 const asyncHandler = require('express-async-handler');
-const { removeTmp, cloudinary } = require('../utils/cloudinary');
 const register = asyncHandler(async (req, res) => {
     const { email, password, name, phone, address } = req.body
     if (!email || !password || !name || !phone)
@@ -44,7 +41,7 @@ const login = asyncHandler(async (req, res) => {
         const accessToken = generateAccessToken(isAccount.id, isAccount.role);
         const newrefreshToken = generateRefreshToken(isAccount.id, isAccount.role);
         await User.updateToken(isAccount.id, newrefreshToken);
-        res.cookie('refreshToken', newrefreshToken, { httpOnly: true, maxAge: 3 * 24 * 60 * 60 * 1000 })
+        res.cookie('refreshToken', newrefreshToken, { maxAge: 3 * 24 * 60 * 60 * 1000 })
         return res.status(200).json({
             accessToken,
             success: true,
@@ -58,6 +55,27 @@ const login = asyncHandler(async (req, res) => {
     }
 })
 const getAllUser = asyncHandler(async (req, res) => {
+    const { page, limit, sort, val_sort, search } = req.query;
+
+    let qs = '';
+    const page_current = page || 1;
+    const li = limit || 10;
+    const offset = (page_current > 0 ? (page_current - 1) * li : 0);
+
+    qs = ` LIMIT ${offset},${li}`;
+
+    if (sort || val_sort) {
+        qs = ` ORDER BY ${sort} ${val_sort} ` + qs
+    }
+    if (search) {
+        qs = ` where name like '%${search}%' OR email like '%${search}%'  OR phone  like '%${search}%' ` + qs
+    }
+    const result = await User.find(qs);
+
+    return res.status(200).json({
+        success: false,
+        data: result
+    })
 
 })
 const getAccount = asyncHandler(async (req, res) => {
@@ -74,7 +92,7 @@ const getAccount = asyncHandler(async (req, res) => {
 })
 const logout = asyncHandler(async (req, res) => {
     const cookie = req.cookies;
-    if (!cookie || !cookie.refreshToken) throw new Error("No refresh token in cookie");
+    if (!cookie || !cookie?.refreshToken) throw new Error("No refresh token in cookie");
     await User.updateRefreshToken(cookie.refreshToken);
     res.clearCookie('refreshToken', {
         httpOnly: true,
@@ -87,32 +105,34 @@ const logout = asyncHandler(async (req, res) => {
 });
 const updateUserAvatar = asyncHandler(async (req, res) => {
     const { id } = req.user;
-    const file = req.files.file;
+    const file = req.file.path;
     if (file) {
-        cloudinary.uploader.upload(file.tempFilePath, { folder: "avatar" }, async (err, result) => {
-            if (err) {
-                removeTmp(file.tempFilePath);
-                return res.status(500).json({ success: false, error: err.message });
-            }
-
-            try {
-                removeTmp(file.tempFilePath);
-                const data = { avatar: result.secure_url };
-                await User.updateUser(data, id);
-                return res.status(200).json({
-                    success: true,
-                    data: { url: result.secure_url, mes: 'Cập nhật thành công' }
-                });
-            } catch (error) {
-                return res.status(500).json({ success: false, error: error.message });
-            }
+        const data = { avatar: file };
+        await User.updateUser(data, id);
+        return res.status(200).json({
+            success: true,
+            data: { url: file, mes: 'Cập nhật thành công' }
         });
     }
+    return res.status(200).json({
+        data: { success: false }
+    })
 })
 const updateUser = asyncHandler(async (req, res) => {
-    const { id } = req.user;
-    console.log(id);
-    console.log(req.body);
+    const { id, role } = req.user;
+    if (+role === 1) {
+        let id = req.params.id;
+        const user = await User.updateUser(req.body, id);
+        if (user.affectedRows > 0) {
+            return res.status(200).json({
+                data: { success: true, mes: 'Cập nhật thành công' }
+            })
+        }
+        return res.status(404).json({
+            success: false,
+            message: 'Có lỗi xảy ra'
+        });
+    }
     const u = await User.updateUser(req.body, id);
     if (u.affectedRows > 0) {
         return res.status(200).json({
@@ -145,6 +165,21 @@ const updatePassUser = asyncHandler(async (req, res) => {
         })
     }
 })
+const deleteUser = asyncHandler(async (req, res) => {
+    const id = req.params.id;
+    const re = await User.findAndDelete(id);
+    if (re > 0) {
+        return res.status(200).json({
+            data: {
+                success: true,
+                mes: 'Đã xóa tài khoản trên !'
+            }
+        });
+    }
+    res.status(404).json({
+        success: false
+    });
+})
 
 
-module.exports = { getAllUser, register, login, getAccount, logout, updateUser, updateUserAvatar, updatePassUser }
+module.exports = { deleteUser, getAllUser, register, login, getAccount, logout, updateUser, updateUserAvatar, updatePassUser }
