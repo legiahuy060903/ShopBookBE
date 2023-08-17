@@ -92,12 +92,12 @@ const getAccount = asyncHandler(async (req, res) => {
 })
 const logout = asyncHandler(async (req, res) => {
     const cookie = req.cookies;
-    if (!cookie || !cookie?.refreshToken) throw new Error("No refresh token in cookie");
-    await User.updateRefreshToken(cookie.refreshToken);
-    res.clearCookie('refreshToken', {
-        httpOnly: true,
-        secure: true
-    })
+    // if (!cookie || !cookie?.refreshToken) throw new Error("No refresh token in cookie");
+    // await User.updateRefreshToken(cookie.refreshToken);
+    // res.clearCookie('refreshToken', {
+    //     httpOnly: true,
+    //     secure: true
+    // })
     return res.status(200).json({
         success: true,
         data: 'Logout is done !'

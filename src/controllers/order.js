@@ -18,7 +18,6 @@ const CreOrder = asyncHandler(async (req, res) => {
     if (order_id) {
         const cart = req.body?.cart.map(item => ([+item.cart.id, item.cart.name, +item.cart.price, +item.quantity, order_id]));
         const orderDetail = await createOrderDetail(cart);
-        console.log(orderDetail);
         if (orderDetail) {
             const { ...data } = await getOrder(user_id, order_id);
             return res.status(200).json({
@@ -105,7 +104,6 @@ const getAllOrderAndDetail = asyncHandler(async (req, res) => {
     let page_current = +page || 1;
     let qs = '';
     let conditions = [];
-    console.log(user_id, filter_status);
     const offset = (page_current > 0 ? (page_current - 1) * li : 0);
     qs = ` LIMIT ${offset}, ${li} `;
 

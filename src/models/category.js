@@ -4,7 +4,7 @@ const { delProduct } = require('./product');
 async function findCategory() {
     return new Promise((resolve, reject) => {
         db.query(
-            'SELECT * FROM category',
+            'SELECT * FROM category where block = 1',
             function (err, results) {
                 resolve(results);
             }

@@ -1,5 +1,5 @@
 
-const { createComment, findByProduct, countCmByPd, getCommentsByParentId, findLikeAndUpdate, findLikeByProduct } = require('../models/comment');
+const { createComment, findAndUpdate, findAndDelete, findByProduct, countCmByPd, getCommentsByParentId, findLikeAndUpdate, findLikeByProduct, findAllComment } = require('../models/comment');
 const asyncHandler = require('express-async-handler');
 
 
@@ -62,9 +62,54 @@ const getComments = asyncHandler(async (req, res) => {
             });
         }
     }
-
     return res.status(404).json({
         success: false,
     });
 });
-module.exports = { create, getComments, createLike };
+const getAllComments = asyncHandler(async (req, res) => {
+    const { page, limit, sort, val_sort } = req.query;
+    const li = limit || 10;
+    let page_current = +page || 1;
+
+    const offset = (page_current > 0 ? (page_current - 1) * li : 0);
+    let qs = ` LIMIT ${offset},${li} `;
+    if (sort || val_sort) {
+        qs = ` ORDER BY ${sort} ${val_sort} ` + qs;
+    }
+    const re = await findAllComment(qs);
+    return res.status(200).json({
+        success: true,
+        data: re,
+    });
+});
+const delComment = asyncHandler(async (req, res) => {
+    let result = await findAndDelete(req.params.id);
+    if (result) {
+        return res.status(200).json({
+            data: {
+                success: true,
+                mes: 'Đã xóa bình luận trên'
+            }
+        });
+    }
+    res.status(404).json({
+        success: false,
+        message: 'Lỗi xảy ra'
+    });
+});
+const updateComment = asyncHandler(async (req, res) => {
+    let result = await findAndUpdate(req.body);
+    if (result > 0) {
+        return res.status(200).json({
+            data: {
+                success: true,
+                mes: 'Cập nhật thành công'
+            }
+        });
+    }
+    res.status(404).json({
+        success: false,
+        message: 'Lỗi xảy ra'
+    });
+});
+module.exports = { updateComment, getAllComments, create, getComments, createLike, delComment };

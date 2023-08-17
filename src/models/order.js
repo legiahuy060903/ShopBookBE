@@ -14,13 +14,24 @@ async function createOrder(data) {
 }
 
 async function createOrderDetail(data) {
-    return new Promise((resolve, reject) => {
-        db.query(' INSERT INTO order_detail (product_id,product_name, price, quantity, order_id) VALUES ? ', [data], function (err, result) {
-            if (err) console.log(err);
-            resolve(result);
-        });
-    })
+    let se = `SELECT id, quantity, sold FROM product WHERE id = ?`;
+    let update = 'UPDATE product SET ? WHERE id = ?';
+    let insert = 'INSERT INTO order_detail (product_id, product_name, price, quantity, order_id) VALUES ?';
+
+    for (const item of data) {
+        let pd = (await pool.query(se, item[0]))[0][0];
+        let val = {
+            quantity: pd.quantity - +item[3],
+            sold: pd.sold + +item[3]
+        }
+        await pool.query(update, [val, pd.id]);
+    }
+
+    let result = (await pool.query(insert, [data]))[0];
+    return result;
 }
+
+
 async function getOrder(user_id, order_id) {
     return new Promise((resolve, reject) => {
         db.query(`SELECT orders.*,

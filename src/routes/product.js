@@ -15,7 +15,7 @@ router.get('/detail/:id', ctrls.getProductDetail);
 // router.put('/ratings', verifyAccessToken, ctrls.ratings);
 // router.use(verifyAccessToken, isAdmin);
 router.put('/:id', [verifyAccessToken, isAdmin], uploadCloud.fields([{ name: 'slide' }, { name: 'thumbnail' }]), ctrls.updateProduct)
-router.post('/img', [verifyAccessToken, isAdmin], ctrls.delImgProduct);
+router.delete('/img', [verifyAccessToken, isAdmin], ctrls.delImgProduct);
 router.delete('/:id', [verifyAccessToken, isAdmin], ctrls.deleteProduct);
 
 

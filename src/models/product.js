@@ -55,15 +55,17 @@ async function findAllNew() {
         );
     })
 }
+// async function findAllRandom() {
+//     const countQuery = 'SELECT COUNT(id) AS total FROM product WHERE block = 1';
+//     let count = ((await pool.query(countQuery))[0])[0].COUNT;
+//     console.log(count);
+// }
 async function findOneProduct(id) {
-    return new Promise((resolve, reject) => {
-        db.query(
-            `SELECT p.*, c.name as name_category, GROUP_CONCAT( DISTINCT  i.url ) AS images FROM product p  JOIN category c LEFT JOIN image i ON p.id = i.product_id  WHERE p.id = ${id}`,
-            function (err, results) {
-                resolve(results);
-            }
-        );
-    })
+    let qs = `SELECT p.*, c.name as name_category, GROUP_CONCAT(DISTINCT  i.url) AS images FROM product p  JOIN category c LEFT JOIN image i ON p.id = i.product_id  WHERE p.id = ${id}`
+    let data = (await pool.query(qs))[0];
+    const con = { view: ++data[0].view, id: data[0].id };
+    await pool.query(`UPDATE product SET view = ? WHERE id = ?`, [con.view, con.id])
+    return data
 }
 const countProduct = (query) => {
     return new Promise((resolve, reject) => {
@@ -86,6 +88,7 @@ const createProduct = (data) => {
         );
     })
 }
+
 const createProductImage = (data) => {
     return new Promise((resolve, reject) => {
         db.query(
@@ -124,11 +127,11 @@ const findImgProduct = async (id) => {
     return arrImg
 }
 
-const destroyImg = (url) => {
+const destroyImg = async (url) => {
     const start = url.lastIndexOf('book/');
     const end = url.lastIndexOf('.');
     const publicId = url.substring(start, end);
-    cloudinary.uploader.destroy(publicId);
+    await cloudinary.uploader.destroy(publicId);
 }
 const delImg = (id) => {
     return new Promise((resolve, reject) => {

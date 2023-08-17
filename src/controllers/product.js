@@ -52,9 +52,9 @@ const deleteProduct = asyncHandler(async (req, res) => {
     });
 });
 const delImgProduct = asyncHandler(async (req, res) => {
-    const { uid, url } = req.body;
+    const { uid, url } = req.query;
+    await productModel.destroyImg(url);
     await productModel.delImg(uid);
-    productModel.destroyImg(url);
     return res.sendStatus(200);
 });
 const getProduct = asyncHandler(async (req, res) => {
@@ -107,6 +107,7 @@ const getProduct = asyncHandler(async (req, res) => {
 });
 const getBanner = asyncHandler(async (req, res) => {
     let result = await productModel.findAllBanner();
+    // await productModel.findAllRandom()
     if (result) {
         return res.status(200).json({
             success: true,

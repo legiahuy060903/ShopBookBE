@@ -6,6 +6,6 @@ const pool = mysqlAsync.createPool({
     password: '',
     waitForConnections: true,
     connectionLimit: 10,
-    port: 3333,
+    port: 3309,
 });
 module.exports = pool;
