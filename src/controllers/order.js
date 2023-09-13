@@ -150,7 +150,6 @@ const delOrder = asyncHandler(async (req, res) => {
 })
 const updateOrder = asyncHandler(async (req, res) => {
     const { id, ...rest } = req.body;
-    console.log(id, rest);
     let result = await findAndUpdate(id, rest);
     if (result) {
         return res.status(200).json({

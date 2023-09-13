@@ -37,7 +37,7 @@ const getComments = asyncHandler(async (req, res) => {
     const { product_id, page } = req.query;
     const li = 5;
     if (product_id) {
-        const total = await countCmByPd(product_id);
+        const { total } = await countCmByPd(product_id);
         if (total) {
             const offset = page ? (page - 1) * 5 : 0;
             const data = await findByProduct(product_id, offset, li);
@@ -50,7 +50,7 @@ const getComments = asyncHandler(async (req, res) => {
                     return item;
                 })
             );
-            const result = { comments, ...total };
+            const result = { comments, total: total };
             return res.status(200).json({
                 success: true,
                 data: result,

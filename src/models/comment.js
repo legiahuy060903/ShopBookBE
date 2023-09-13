@@ -6,7 +6,10 @@ async function createComment(data) {
 }
 async function countCmByPd(product_id) {
     let qs = `SELECT COUNT(product_id) as total FROM comment WHERE product_id = ${product_id} and parent_id = -1 and block = 1 GROUP BY product_id`;
-    return (await pool.query(qs))[0];
+
+    const [total] = (await pool.query(qs))[0];
+    return total;
+
 }
 async function findByProduct(product_id, off, limit) {
     let qs = `SELECT * FROM comment WHERE product_id = ${product_id} and parent_id = -1 and block = 1 order by created_at desc LIMIT ${off},${limit}`;
