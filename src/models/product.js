@@ -55,11 +55,7 @@ async function findAllNew() {
         );
     })
 }
-// async function findAllRandom() {
-//     const countQuery = 'SELECT COUNT(id) AS total FROM product WHERE block = 1';
-//     let count = ((await pool.query(countQuery))[0])[0].COUNT;
-//     console.log(count);
-// }
+
 async function findOneProduct(id) {
     let qs = `SELECT p.*, c.name as name_category, GROUP_CONCAT(DISTINCT  i.url) AS images FROM product p  JOIN category c LEFT JOIN image i ON p.id = i.product_id  WHERE p.id = ${id}`
     let data = (await pool.query(qs))[0];

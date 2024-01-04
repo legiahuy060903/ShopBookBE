@@ -4,7 +4,7 @@ const asyncHandler = require('express-async-handler');
 async function register(query) {
     return new Promise((resolve, reject) => {
         db.query(
-            `INSERT INTO user`,
+            `INSERT INTO account`,
             function (err, results, fields) {
                 resolve(results);
             }
@@ -15,7 +15,7 @@ async function register(query) {
 async function findEmail(email) {
     return new Promise((resolve, reject) => {
         db.query(
-            `select * from user where email =? `, email,
+            `select * from account where email =? `, email,
             function (err, results) {
                 if (err) throw err;
                 else resolve(results[0]);
@@ -24,10 +24,10 @@ async function findEmail(email) {
     })
 }
 async function find(qs) {
-    let user = (await pool.query('SELECT * FROM user ' + qs))[0];
+    let user = (await pool.query('SELECT * FROM account ' + qs))[0];
     let cut = qs.slice(0, qs.indexOf("LIMIT"));
-    let total = ((await pool.query('SELECT count(id) as total FROM user ' + cut))[0])[0].total;
-    const all = (await pool.query('SELECT * from user'))[0];
+    let total = ((await pool.query('SELECT count(id) as total FROM account ' + cut))[0])[0].total;
+    const all = (await pool.query('SELECT * from account'))[0];
     const dataExport = all.map(item => {
         delete item.refreshToken
         delete item.role
@@ -39,7 +39,7 @@ async function find(qs) {
 const findById = async (id) => {
     return new Promise((resolve, reject) => {
         db.query(
-            `select id, name , email , address , avatar , role , phone,gender,date  from user where id = ? `, id,
+            `select id, name , email , address , avatar , role , phone,gender,date  from account where id = ? `, id,
             function (err, results) {
                 if (err) reject(err);
                 else resolve(results[0]);
@@ -50,7 +50,7 @@ const findById = async (id) => {
 const findByIdAndPass = async (id, password) => {
     return new Promise((resolve, reject) => {
         db.query(
-            `select id from user where id = ? and password = ? `, [id, password],
+            `select id from account where id = ? and password = ? `, [id, password],
             function (err, results) {
                 if (err) reject(err);
                 else resolve(results[0]);
@@ -61,7 +61,7 @@ const findByIdAndPass = async (id, password) => {
 const updateToken = (id, token) => {
     return new Promise((resolve, reject) => {
         db.query(
-            "UPDATE user SET refreshToken = ? WHERE id = ?",
+            "UPDATE account SET refreshToken = ? WHERE id = ?",
             [token, id],
             function (err, data) {
                 if (err) throw err;
@@ -73,7 +73,7 @@ const updateToken = (id, token) => {
 const updateRefreshToken = (t) => {
     return new Promise((resolve, reject) => {
         db.query(
-            "UPDATE user SET refreshToken = '' WHERE refreshToken = ?",
+            "UPDATE account SET refreshToken = '' WHERE refreshToken = ?",
             t,
             function (err, data) {
                 if (err) throw err;
@@ -85,7 +85,7 @@ const updateRefreshToken = (t) => {
 async function findEmailAndPassword(email, password) {
     return new Promise((resolve, reject) => {
         db.query(
-            `select * from user where email = ? and password = ?`, [email, password],
+            `select * from account where email = ? and password = ?`, [email, password],
             function (err, results) {
                 if (err) throw err;
                 else resolve(results[0]);
@@ -95,7 +95,7 @@ async function findEmailAndPassword(email, password) {
 }
 const create = asyncHandler((user) => {
     return new Promise((resolve, reject) => {
-        db.query("INSERT INTO user SET ?", user, function (err, data) {
+        db.query("INSERT INTO account SET ?", user, function (err, data) {
             if (err) throw new Error('Lỗi xảy ra trong db');
             else resolve(data.affectedRows);
         });
@@ -103,7 +103,7 @@ const create = asyncHandler((user) => {
 });
 const updateUser = asyncHandler((user, id) => {
     return new Promise((resolve, reject) => {
-        db.query("UPDATE user SET ? WHERE id = ?", [user, id], function (err, data) {
+        db.query("UPDATE account SET ? WHERE id = ?", [user, id], function (err, data) {
             if (err) throw new Error(err);
             else resolve(data);
         });
@@ -122,7 +122,7 @@ const findAndDelete = async (id) => {
     await Promise.all([pool.query(deleteOrderDetailQuery, id),
     pool.query(deleteLikeCommentQuery, id), pool.query(deleteCommentQuery, id)]);
 
-    let re = (await pool.query('DELETE FROM user where id = ?', id))[0];
+    let re = (await pool.query('DELETE FROM account where id = ?', id))[0];
     return re.affectedRows
 }
 

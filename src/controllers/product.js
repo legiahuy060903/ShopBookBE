@@ -93,13 +93,14 @@ const getProduct = asyncHandler(async (req, res) => {
         whereClause = `AND ${conditions.join(' AND ')}`;
     }
 
-    const query = `SELECT  p.*, c.name AS name_category, 
+    const query = `SELECT count(p.id) ,p.*, c.name AS name_category, 
     ( SELECT CONCAT('[', GROUP_CONCAT( CONCAT(' {"id":', i.id, ',"url": "', i.url, '" }') ORDER BY i.id SEPARATOR ',' ), ']') 
     FROM image i WHERE i.product_id = p.id ) AS images FROM product p 
     JOIN category c ON p.category_id = c.id  WHERE c.id = p.category_id ${whereClause} group by p.id ${qs}`;
     const result = await productModel.allProduct(query);
     const queryCount = query.slice(0, query.indexOf('LIMIT'));
     const total = await productModel.countProduct(queryCount);
+
     return res.status(200).json({
         success: true,
         data: { data: result, total: total?.length },

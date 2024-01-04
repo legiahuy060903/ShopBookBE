@@ -25,7 +25,6 @@ const createLike = asyncHandler(async (req, res) => {
     }
 
     let isLike = await findLikeAndUpdate(product_id, user_id, comment_id, like_comment);
-    console.log(isLike);
     if (isLike) {
         return res.status(200).json({
             success: true,
